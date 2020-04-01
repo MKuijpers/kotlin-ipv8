@@ -82,6 +82,7 @@ class JoinNetworkFragment(
     private suspend fun crawlAvailableSharedWallets(): ArrayList<TrustChainBlock> {
         val allUsers = trustchain.getUsers()
         val discoveredBlocks: ArrayList<TrustChainBlock> = arrayListOf()
+        Log.i("Coin", "Users found: ${allUsers.size}")
 
         for (index in allUsers.indices) {
             // Continue with the next user if the peer is not found!
@@ -93,10 +94,12 @@ class JoinNetworkFragment(
                     trustchain.crawlChain(peer)
                     var crawlResult = trustchain
                         .getChainByUser(peer.publicKey.keyToBin())
-
+                    Log.i("Coin", "Found blocks: ${crawlResult.size}")
+                    
                     crawlResult = crawlResult.filter {
                         CoinCommunity.SW_TRANSACTION_BLOCK_KEYS.contains(it.type)
                     }
+                    Log.i("Coin", "Found shared wallet blocks: ${crawlResult.size}")
                     discoveredBlocks.addAll(crawlResult)
                 }
             } catch (t: Throwable) {
