@@ -12,7 +12,6 @@ import org.bitcoinj.core.Coin
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.json.JSONException
-import org.json.JSONObject
 
 @Suppress("UNCHECKED_CAST")
 class CoinCommunity : Community() {
@@ -63,6 +62,7 @@ class CoinCommunity : Community() {
     ) {
         val bitcoinPublicKey = WalletManagerAndroid.getInstance().networkPublicECKeyHex()
         val trustChainPk = myPeer.publicKey.keyToBin()
+
         val blockData = SWJoinBlockTransactionData(
             entranceFee,
             transactionSerialized,
@@ -208,8 +208,7 @@ class CoinCommunity : Community() {
      */
     private fun tryToFetchSerializedTransaction(block: TrustChainBlock): String? {
         return try {
-            JSONObject(block.transaction)
-                .getString(CoinCommunity.SW_TRANSACTION_SERIALIZED)
+            SWUtil.parseTransaction(block.transaction).get(SW_TRANSACTION_SERIALIZED).asString
         } catch (exception: JSONException) {
             null
         }
@@ -256,8 +255,10 @@ class CoinCommunity : Community() {
      * 3.2 Transfer funds from an existing shared wallet to a third-party. Broadcast bitcoin transaction.
      */
     public fun transferFunds(
-        serializedSignatures: List<String>, swBlockHash: ByteArray,
-        receiverAddress: String, satoshiAmount: Long
+        serializedSignatures: List<String>,
+        swBlockHash: ByteArray,
+        receiverAddress: String,
+        satoshiAmount: Long
     ): WalletManager.TransactionPackage {
         val mostRecentSWBlock = fetchLatestSharedWalletTransactionBlock(swBlockHash)
             ?: throw IllegalStateException("Something went wrong fetching the latest SW Block: $swBlockHash")
@@ -331,21 +332,21 @@ class CoinCommunity : Community() {
         fromBlocks: List<TrustChainBlock>
     ): TrustChainBlock? {
         // TODO: only fetch shared wallet blocks with [SW_TRANSACTION_SERIALIZED] in it
-        val walletId = SWUtil.parseTransaction(block.transaction).getString(SW_UNIQUE_ID)
+        val walletId = SWUtil.parseTransaction(block.transaction).get(SW_UNIQUE_ID).asString
         return fromBlocks
-            .filter { SWUtil.parseTransaction(it.transaction).getString(SW_UNIQUE_ID) == walletId }
+            .filter { SWUtil.parseTransaction(it.transaction).get(SW_UNIQUE_ID).asString == walletId }
             .maxBy { it.timestamp.time }
     }
 
     /**
+     * Discover shared wallets that you can join, return the latest (known) blocks
      * Fetch the latest block associated with a shared wallet.
      * swBlockHash - the hash of one of the blocks associated with a shared wallet.
      */
     private fun fetchLatestSharedWalletTransactionBlock(swBlockHash: ByteArray): TrustChainBlock? {
         val swBlock = getTrustChainCommunity().database.getBlockWithHash(swBlockHash)
             ?: return null
-        val transactionBlockTypes = listOf(SHARED_WALLET_BLOCK, TRANSFER_FINAL_BLOCK)
-        val transactionBlocks = fetchSharedWalletBlocks(transactionBlockTypes)
+        val transactionBlocks = fetchSharedWalletBlocks(SW_TRANSACTION_BLOCK_KEYS)
         return fetchLatestSharedWalletBlock(swBlock, transactionBlocks)
     }
 
@@ -356,7 +357,7 @@ class CoinCommunity : Community() {
         val sharedWalletBlocks = fetchSharedWalletBlocks()
         // For every distinct unique shared wallet, find the latest block
         return sharedWalletBlocks
-            .distinctBy { SWUtil.parseTransaction(it.transaction).getString(SW_UNIQUE_ID) }
+            .distinctBy { SWUtil.parseTransaction(it.transaction).get(SW_UNIQUE_ID).asString }
             .map { fetchLatestSharedWalletBlock(it, sharedWalletBlocks) ?: it }
     }
 
@@ -366,7 +367,8 @@ class CoinCommunity : Community() {
     public fun fetchLatestJoinedSharedWalletBlocks(): List<TrustChainBlock> {
         return discoverSharedWallets().filter {
             val blockData = SWUtil.parseTransaction(it.transaction)
-            val userTrustchainPks = SWUtil.parseJSONArray(blockData.getJSONArray(SW_TRUSTCHAIN_PKS))
+
+            val userTrustchainPks = SWUtil.parseJSONArray(blockData.get(SW_TRUSTCHAIN_PKS).asJsonArray)
             userTrustchainPks.contains(myPeer.publicKey.keyToBin().toHex())
         }
     }
@@ -448,6 +450,8 @@ class CoinCommunity : Community() {
         public const val TRANSFER_FUNDS_ASK_BLOCK = "TRANSFER_FUNDS_ASK_BLOCK"
         public const val SIGNATURE_AGREEMENT_BLOCK = "SIGNATURE_AGREEMENT_BLOCK"
 
+        // Values below are present in SW_TRANSACTION_BLOCK_KEYS block types
+        public val SW_TRANSACTION_BLOCK_KEYS = listOf(SHARED_WALLET_BLOCK, TRANSFER_FINAL_BLOCK)
         public const val SW_UNIQUE_ID = "SW_UNIQUE_ID"
         public const val SW_TRANSACTION_SERIALIZED = "SW_PK"
         public const val SW_TRUSTCHAIN_PKS = "SW_TRUSTCHAIN_PKS"
