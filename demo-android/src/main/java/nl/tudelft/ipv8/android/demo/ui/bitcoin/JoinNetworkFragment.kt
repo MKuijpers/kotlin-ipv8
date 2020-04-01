@@ -80,15 +80,24 @@ class JoinNetworkFragment(
      * Crawl all shared wallet blocks of users in the trust chain.
      */
     private suspend fun crawlAvailableSharedWallets(): ArrayList<TrustChainBlock> {
-        val allUsers = trustchain.getUsers()
+//        val allUsers = trustchain.getUsers()
+//        val discoveredBlocks: ArrayList<TrustChainBlock> = arrayListOf()
+//        Log.i("Coin", "Users found: ${allUsers.size}")
+
+        val allUsers = getDemoCommunity().getPeers()
         val discoveredBlocks: ArrayList<TrustChainBlock> = arrayListOf()
         Log.i("Coin", "Users found: ${allUsers.size}")
 
         for (index in allUsers.indices) {
             // Continue with the next user if the peer is not found!
-            val publicKey = allUsers[index].publicKey
+//            val publicKey = allUsers[index].publicKey
+//            val peer = trustchain.getPeerByPublicKeyBin(publicKey) ?: continue
+//            Log.i("Coin", "Crawling user with public key: $publicKey")
+
+            val publicKey = allUsers[index].publicKey.keyToBin()
+            Log.i("Coin", "Attempting to get peer with public key: ${publicKey.toHex()}")
             val peer = trustchain.getPeerByPublicKeyBin(publicKey) ?: continue
-            Log.i("Coin", "Crawling user with public key: $publicKey")
+            Log.i("Coin", "Crawling user with public key: ${publicKey.toHex()}")
 
             try {
                 withTimeout(SW_CRAWLING_TIMEOUT_MILLI) {
