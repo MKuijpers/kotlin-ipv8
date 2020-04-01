@@ -3,13 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/item_blockchain_refresh"
-        android:title="Refresh"
         android:icon="@drawable/ic_loop_black_24dp"
+        android:iconTint="#FFFFFF"
+        android:title="Refresh"
         app:showAsAction="always" />
     <item
         android:id="@+id/item_blockchain_download_progress"
         android:enabled="true"
         android:icon="@drawable/ic_cloud_download_black_24dp"
+        android:iconTint="#FFFFFF"
         android:title="Download Progress"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/exit_wallet"
+        android:iconTint="#FFFFFF"
+        android:title="Exit Current Wallet"
+        app:showAsAction="withText" />
 </menu>

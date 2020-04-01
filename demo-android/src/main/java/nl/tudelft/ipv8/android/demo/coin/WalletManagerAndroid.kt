@@ -43,4 +43,13 @@ object WalletManagerAndroid {
 
     }
 
+    fun isInitialized(): Boolean {
+        return walletManager != null
+    }
+
+    fun close() {
+        walletManager!!.kit.stopAsync()
+        walletManager = null
+    }
+
 }
