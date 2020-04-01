@@ -26,7 +26,6 @@ import kotlin.concurrent.thread
  */
 class JoinNetworkFragment(
 ) : BaseFragment(R.layout.fragment_join_network) {
-    private val tempBitcoinPk = ByteArray(2)
     private var adapter: SharedWalletListAdapter? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
