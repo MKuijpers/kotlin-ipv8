@@ -88,6 +88,7 @@ class JoinNetworkFragment(
             // Continue with the next user if the peer is not found!
             val publicKey = allUsers[index].publicKey
             val peer = trustchain.getPeerByPublicKeyBin(publicKey) ?: continue
+            Log.i("Coin", "Crawling user with public key: $publicKey")
 
             try {
                 withTimeout(SW_CRAWLING_TIMEOUT_MILLI) {
@@ -95,7 +96,7 @@ class JoinNetworkFragment(
                     var crawlResult = trustchain
                         .getChainByUser(peer.publicKey.keyToBin())
                     Log.i("Coin", "Found blocks: ${crawlResult.size}")
-                    
+
                     crawlResult = crawlResult.filter {
                         CoinCommunity.SW_TRANSACTION_BLOCK_KEYS.contains(it.type)
                     }
