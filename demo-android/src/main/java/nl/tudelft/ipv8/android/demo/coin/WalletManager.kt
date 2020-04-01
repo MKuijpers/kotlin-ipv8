@@ -432,7 +432,7 @@ class WalletManager(
             Log.i("Coin", "Coin: broadcast of transaction ${transaction.txId} progress: $progress.")
         }
         Log.i("Coin", "Coin: transaction broadcast of ${transaction.txId} is initiated.")
-        broadcastTransaction.broadcast().get(60.toLong(), TimeUnit.SECONDS)
+        broadcastTransaction.broadcast()
         Log.i("Coin", "Coin: transaction broadcast of ${transaction.txId} is complete!")
     }
 
